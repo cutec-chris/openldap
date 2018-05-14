@@ -59,6 +59,21 @@ for schema in $SCHEMAS; do
     echo "include /etc/openldap/schema/${schema}.schema" >> /etc/ldap/slapd.conf
 done
 if test -e /ssl/live/${DOMAIN}/chain.pem \
+        -a -e /ssl/live/${DOMAIN}/privkey.pem \
+        -a -e /ssl/live/${DOMAIN}/cert.pem; then
+    cat >> /etc/ldap/slapd.conf <<EOF
+TLSCipherSuite HIGH:MEDIUM:-SSLv2:-SSLv3
+TLSCertificateFile /ssl/live/${DOMAIN}/cert.pem
+TLSCertificateKeyFile /ssl/live/${DOMAIN}/privkey.pem
+TLSCACertificateFile /ssl/live/${DOMAIN}/chain.pem
+# apk add ca-certificates +:
+#TLSCACertificatePath /usr/share/ca-certificates/mozilla
+EOF
+    SSL_HOSTS=" ldaps:/// ldapi:///"
+else
+    SSL_HOSTS=""
+fi
+if test -e /ssl/live/${DOMAIN}/chain.pem \
         -a -e /ssl/live/${DOMAIN}/key.pem \
         -a -e /ssl/live/${DOMAIN}/cert.pem; then
     cat >> /etc/ldap/slapd.conf <<EOF
